@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.pytest_cache/
+
+# Generated data
+/data/raw/
+/data/raw_sample/
+/data/generated/
+
+# Databricks local files
+.databricks/
+.bundle/
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/
