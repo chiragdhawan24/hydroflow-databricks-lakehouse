@@ -1,121 +1,215 @@
 # HydroFlow Implementation Plan
 
-This plan keeps the project build manageable and GitHub-ready. Each step should create runnable code, a short README update, and a measurable output.
+This document tracks the step-by-step implementation of HydroFlow, a Databricks Lakehouse project for real-time water utility analytics.
+
+Each phase is designed to produce runnable code, documentation updates, and clear validation criteria.
+
+---
 
 ## Step 1 — Repository Foundation and Synthetic Data Generator
 
-Goal: Create realistic raw utility data that can feed all downstream Databricks concepts.
+**Goal:** Create realistic synthetic utility datasets for downstream Databricks ingestion and transformation.
 
-Deliverables:
-- GitHub-ready repository structure
-- Synthetic data generator
+**Deliverables:**
+- Repository scaffold
+- Synthetic raw data generator
 - Raw data contracts
-- Starter Bronze notebook skeleton
-- Metrics template
+- Starter Bronze ingestion notebook
+- Metrics and benchmark template
 
-Validation:
-- Generated raw files exist under meter readings, outage events, customer CDC, billing, and GIS zones
-- Duplicate meter events are present
-- Invalid meter readings are present
-- Customer CDC contains insert, update, and delete operations
+**Validation:**
+- Raw files are generated for meter readings, outage events, customer CDC, billing, and GIS zones
+- Duplicate meter events are present for deduplication testing
+- Invalid meter readings are present for data quality testing
+- Customer CDC contains insert, update, and delete events
+
+---
 
 ## Step 2 — Bronze Auto Loader Ingestion
 
-Goal: Incrementally ingest raw files using Databricks Auto Loader.
+**Goal:** Incrementally ingest raw files into Bronze Delta tables using Databricks Auto Loader.
 
-Deliverables:
-- Auto Loader notebook for meter readings
-- Checkpoint and schema locations
-- Bronze Delta table
-- Metadata columns: source file, ingestion timestamp, source system
+**Deliverables:**
+- Auto Loader ingestion notebook
+- Bronze Delta tables
+- Checkpoint and schema tracking locations
+- Ingestion metadata columns such as source file, ingestion timestamp, and source system
 
-## Step 3 — Multiplex Bronze
+**Validation:**
+- Raw files are loaded incrementally
+- Bronze tables preserve raw source data
+- Re-running the ingestion does not duplicate previously processed files
 
-Goal: Store multiple raw entities in one normalized Bronze table.
+---
 
-Deliverables:
-- bronze_raw_events table
-- source_entity column
-- raw_payload column
-- schema_version column
+## Step 3 — Multiplex Bronze Design
 
-## Step 4 — Silver Quality Enforcement
+**Goal:** Store multiple raw entities in a normalized Bronze event table.
 
-Goal: Clean and quarantine bad records.
+**Deliverables:**
+- `bronze_raw_events` table
+- `source_entity` column
+- `raw_payload` column
+- `schema_version` column
+- Source-level ingestion metadata
 
-Deliverables:
-- silver_meter_readings table
-- quarantine_invalid_meter_readings table
-- Quality metrics table
+**Validation:**
+- Multiple source entities can be represented in one Bronze table
+- Raw payloads remain traceable to source files
+
+---
+
+## Step 4 — Silver Data Quality Enforcement
+
+**Goal:** Clean valid records and quarantine invalid records.
+
+**Deliverables:**
+- `silver_meter_readings` table
+- `quarantine_invalid_meter_readings` table
+- Data quality metrics table
+
+**Validation:**
+- Null meter IDs, invalid timestamps, and negative usage values are rejected or quarantined
+- Valid records continue to Silver
+- Quality metrics are available for monitoring
+
+---
 
 ## Step 5 — Streaming Deduplication
 
-Goal: Remove duplicate event IDs in streaming data.
+**Goal:** Remove duplicate meter events from streaming data.
 
-Deliverables:
+**Deliverables:**
 - Deduplicated Silver stream
 - Duplicate count metric
+- Watermarking logic for late-arriving data
+
+**Validation:**
+- Duplicate event IDs are removed
+- Late-arriving records are handled consistently
+
+---
 
 ## Step 6 — CDC and SCD Type 2
 
-Goal: Track customer/device history over time.
+**Goal:** Track customer and device changes over time.
 
-Deliverables:
-- customer_dim_scd2
-- device_dim_scd2
-- current flag and effective date columns
+**Deliverables:**
+- Customer dimension history table
+- Device dimension history table
+- Effective start and end dates
+- Current-record flag
+
+**Validation:**
+- Inserts create new dimension records
+- Updates expire old records and create new current records
+- Deletes are handled according to defined business rules
+
+---
 
 ## Step 7 — Delta Change Data Feed
 
-Goal: Propagate changed Silver rows into Gold tables.
+**Goal:** Use Delta Change Data Feed to propagate changed Silver records into downstream tables.
 
-Deliverables:
-- CDF enabled Delta table
-- Incremental Gold update logic
+**Deliverables:**
+- CDF-enabled Delta tables
+- Incremental change processing logic
+- Gold update workflow
 
-## Step 8 — Joins
+**Validation:**
+- Inserts, updates, and deletes can be detected from the change feed
+- Gold tables can be updated incrementally
 
-Goal: Enrich events with service zones and outage context.
+---
 
-Deliverables:
-- Stream-static join: meter readings + GIS zones
-- Stream-stream join: meter readings + outage events
+## Step 8 — Joins and Enrichment
 
-## Step 9 — Gold Analytics
+**Goal:** Enrich meter events with service-zone and outage context.
 
-Goal: Build BI-ready tables.
+**Deliverables:**
+- Stream-static join between meter readings and GIS zones
+- Stream-stream join between meter readings and outage events
+- Enriched Silver event table
 
-Deliverables:
-- gold_zone_usage_daily
-- gold_leak_risk_by_zone
-- gold_outage_sla
-- gold_customer_360
+**Validation:**
+- Meter readings are enriched with service-zone metadata
+- Outage context is joined to relevant meter events
+- Watermarking is used where required
 
-## Step 10 — Optimization Benchmarks
+---
 
-Goal: Measure before/after query performance.
+## Step 9 — Gold Analytics Tables
 
-Deliverables:
+**Goal:** Build analytics-ready Gold tables for reporting and dashboarding.
+
+**Deliverables:**
+- `gold_zone_usage_daily`
+- `gold_leak_risk_by_zone`
+- `gold_outage_sla`
+- `gold_customer_360`
+- `gold_data_quality_metrics`
+
+**Validation:**
+- Gold tables support common utility analytics queries
+- Aggregations are reproducible
+- Tables are suitable for BI consumption
+
+---
+
+## Step 10 — Optimization and Benchmarking
+
+**Goal:** Measure query performance before and after optimization.
+
+**Deliverables:**
 - Baseline query profile
 - Optimized query profile
-- Partitioning and compaction notes
+- Partitioning notes
+- File compaction notes
+- Benchmark summary
 
-## Step 11 — Lakeflow Jobs and Pipelines
+**Validation:**
+- Query runtimes are measured before and after optimization
+- Optimization choices are documented
+- Benchmark results are reproducible
 
-Goal: Orchestrate the full workflow.
+---
 
-Deliverables:
-- Lakeflow Job config
-- Declarative pipeline files
-- Failure troubleshooting notes
+## Step 11 — Workflow Orchestration
+
+**Goal:** Orchestrate the end-to-end pipeline.
+
+**Deliverables:**
+- Lakeflow Jobs configuration
+- Pipeline task dependencies
+- Failure-handling notes
+- Troubleshooting documentation
+
+**Validation:**
+- Pipeline tasks run in the correct order
+- Failures can be diagnosed from job output
+- Re-runs behave predictably
+
+---
 
 ## Step 12 — Governance and Deployment
 
-Goal: Add production-style governance and deployment.
+**Goal:** Add production-style governance and deployment automation.
 
-Deliverables:
-- Unity Catalog SQL
-- Row filters and column masks
-- Declarative Automation Bundle config
-- REST API trigger script
-- CLI deployment notes
+**Deliverables:**
+- Unity Catalog setup SQL
+- Row filter examples
+- Column mask examples
+- Deployment configuration
+- REST API trigger example
+- Databricks CLI notes
+
+**Validation:**
+- Tables are organized under governed catalog/schema structure
+- Access-control examples are documented
+- Deployment steps are reproducible
+
+---
+
+## Notes
+
+This project uses synthetic data only. No real customer, billing, meter, location, or utility infrastructure data should be committed.

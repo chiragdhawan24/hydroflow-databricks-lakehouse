@@ -1,18 +1,16 @@
 # HydroFlow Databricks Lakehouse
 
-**HydroFlow Lakehouse** is a production-style Databricks data engineering project for real-time water utility analytics. It simulates smart-meter readings, outage events, customer/device CDC, billing records, and GIS/service-zone data, then processes them through a Bronze → Silver → Gold Lakehouse architecture.
+HydroFlow is a production-style data engineering project that models a real-time analytics platform for a regional water utility. The project uses synthetic smart-meter, outage, customer, billing, and GIS/service-zone data to demonstrate a Bronze → Silver → Gold Lakehouse architecture on Databricks.
 
-This repository is designed to demonstrate modern Databricks engineering concepts including Auto Loader, multiplex Bronze ingestion, Delta Lake, Structured Streaming, CDC, SCD Type 2, Delta Change Data Feed, Lakeflow Jobs, Lakeflow Spark Declarative Pipelines, Unity Catalog governance, REST API triggers, Databricks CLI, and Declarative Automation Bundles.
-
-> Status: Step 1 complete — GitHub-ready repository foundation + synthetic raw data generator.
+The goal is to build a practical end-to-end Databricks pipeline covering ingestion, data quality, streaming, CDC, dimensional modeling, analytics-ready Gold tables, workflow orchestration, and governance.
 
 ---
 
 ## Business Scenario
 
-A regional water utility wants a near-real-time analytics platform that monitors smart-meter usage, detects possible leaks/outages, tracks customer/device changes over time, and serves BI-ready operational metrics to analysts and service teams.
+A regional water utility needs a near-real-time analytics platform to monitor usage patterns, detect possible leaks or outages, track customer and device changes over time, and support BI-ready operational reporting.
 
-HydroFlow models this platform using only synthetic data, making the project safe to publish publicly.
+HydroFlow simulates this environment using only synthetic data.
 
 ---
 
@@ -21,110 +19,12 @@ HydroFlow models this platform using only synthetic data, making the project saf
 ```text
 Synthetic Data Generator
         ↓
-Raw Landing Zone: meter readings, outage events, customer CDC, billing, GIS zones
+Raw Landing Zone
         ↓
-Bronze: Auto Loader + multiplex raw event table
+Bronze Layer: raw ingestion using Auto Loader
         ↓
-Silver: quality enforcement, deduplication, CDC processing, SCD Type 2, joins
+Silver Layer: cleaning, validation, deduplication, CDC, joins
         ↓
-Gold: zone usage, leak risk, outage SLA, customer 360, data quality metrics
+Gold Layer: analytics-ready utility metrics
         ↓
-Governance + Deployment: Unity Catalog, Lakeflow Jobs, Declarative Automation Bundles
-```
-
----
-
-## Current Repository Structure
-
-```text
-hydroflow-databricks-lakehouse/
-├── README.md
-├── PROJECT_PLAN.md
-├── requirements.txt
-├── .gitignore
-├── data_generator/
-│   ├── README.md
-│   └── generate_raw_data.py
-├── docs/
-│   ├── architecture.md
-│   └── raw_data_contracts.md
-├── notebooks/
-│   └── 01_bronze_autoloader.py
-├── src/
-│   └── hydroflow/
-│       └── __init__.py
-├── tests/
-│   └── test_data_generator.py
-└── benchmarks/
-    └── metrics_template.md
-```
-
----
-
-## Step 1: Generate Synthetic Raw Data
-
-Run locally:
-
-```bash
-python data_generator/generate_raw_data.py \
-  --output data/raw \
-  --customers 5000 \
-  --meters 5000 \
-  --days 3 \
-  --readings-per-meter-per-day 24
-```
-
-For a smaller quick test:
-
-```bash
-python data_generator/generate_raw_data.py --output data/raw_sample --customers 50 --meters 50 --days 2 --readings-per-meter-per-day 4
-```
-
-Expected output:
-
-```text
-data/raw/
-├── meter_readings/ingest_date=YYYY-MM-DD/batch_000.jsonl
-├── outage_events/ingest_date=YYYY-MM-DD/batch_000.jsonl
-├── customer_cdc/ingest_date=YYYY-MM-DD/batch_000.jsonl
-├── billing/ingest_date=YYYY-MM-DD/batch_000.jsonl
-└── gis_zones/zones.csv
-```
-
-The generator intentionally creates:
-
-- Duplicate meter events for streaming deduplication
-- Invalid/null/negative readings for quality enforcement
-- Insert/update/delete customer CDC events
-- Static GIS/service-zone data for stream-static joins
-- Outage events for stream-stream joins
-- Billing records for Gold customer analytics
-
----
-
-## Planned Resume Claim After Full Build
-
-> Implemented an end-to-end Databricks Lakehouse for real-time water utility analytics, processing 1M+ synthetic smart-meter, outage, customer, billing, and GIS events across Bronze, Silver, and Gold Delta Lake layers. Reduced average Gold dashboard query runtime by 40%+ compared with unoptimized Delta table baselines, quarantined 100% invalid records, and maintained under 2-minute end-to-end latency from Bronze ingestion to Gold analytics availability.
-
----
-
-## Roadmap
-
-- [x] Step 1: GitHub scaffold + synthetic data generator
-- [ ] Step 2: Bronze Auto Loader ingestion
-- [ ] Step 3: Multiplex Bronze raw event table
-- [ ] Step 4: Silver quality enforcement and quarantine tables
-- [ ] Step 5: Streaming deduplication
-- [ ] Step 6: Customer/device CDC and SCD Type 2
-- [ ] Step 7: Delta Change Data Feed propagation
-- [ ] Step 8: Stream-static and stream-stream joins
-- [ ] Step 9: Gold materialized analytics tables
-- [ ] Step 10: Query optimization benchmarks
-- [ ] Step 11: Lakeflow Jobs and failure-handling workflows
-- [ ] Step 12: Unity Catalog governance and deployment bundle
-
----
-
-## Safety Note
-
-All data generated by this project is synthetic. Do not commit real customer, meter, billing, location, or utility infrastructure data.
+Orchestration + Governance: Lakeflow Jobs, Unity Catalog, deployment automation
