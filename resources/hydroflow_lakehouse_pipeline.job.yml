@@ -1,0 +1,144 @@
+resources:
+  jobs:
+    hydroflow_lakehouse_pipeline:
+      name: HydroFlow Lakehouse Pipeline
+      tasks:
+        - task_key: bronze_autoloader
+          disable_auto_optimization: true
+          disabled: false
+          email_notifications: {}
+          max_retries: 2
+          min_retry_interval_millis: 60000
+          notebook_task:
+            notebook_path: ../src/01_bronze_autoloader.py
+            source: WORKSPACE
+          retry_on_timeout: false
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+        - task_key: multiplex_bronze
+          depends_on:
+            - task_key: bronze_autoloader
+          disable_auto_optimization: true
+          disabled: false
+          email_notifications: {}
+          max_retries: 2
+          min_retry_interval_millis: 60000
+          notebook_task:
+            notebook_path: ../src/02_multiplex_bronze.py
+            source: WORKSPACE
+          retry_on_timeout: false
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+        - task_key: customer_cdc_scd2
+          depends_on:
+            - task_key: multiplex_bronze
+          disabled: false
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ../src/05_customer_cdc_scd2.py
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+        - task_key: customer_cdf
+          depends_on:
+            - task_key: customer_cdc_scd2
+          disable_auto_optimization: true
+          disabled: false
+          email_notifications: {}
+          max_retries: 2
+          min_retry_interval_millis: 60000
+          notebook_task:
+            notebook_path: ../src/06_delta_change_data_feed.py
+            source: WORKSPACE
+          retry_on_timeout: false
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+        - task_key: silver_billing
+          depends_on:
+            - task_key: bronze_autoloader
+          disable_auto_optimization: true
+          disabled: false
+          email_notifications: {}
+          max_retries: 2
+          min_retry_interval_millis: 60000
+          notebook_task:
+            notebook_path: ../src/08_prepare_silver_billing.py
+            source: WORKSPACE
+          retry_on_timeout: false
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+        - task_key: silver_quality
+          depends_on:
+            - task_key: multiplex_bronze
+          disable_auto_optimization: true
+          disabled: false
+          email_notifications: {}
+          max_retries: 2
+          min_retry_interval_millis: 60000
+          notebook_task:
+            notebook_path: ../src/03_silver_quality_enforcement.py
+            source: WORKSPACE
+          retry_on_timeout: false
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+        - task_key: streaming_dedup
+          depends_on:
+            - task_key: silver_quality
+          disable_auto_optimization: true
+          disabled: false
+          email_notifications: {}
+          max_retries: 2
+          min_retry_interval_millis: 60000
+          notebook_task:
+            notebook_path: ../src/04_streaming_deduplication.py
+            source: WORKSPACE
+          retry_on_timeout: false
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+        - task_key: streaming_joins
+          depends_on:
+            - task_key: streaming_dedup
+          disable_auto_optimization: true
+          disabled: false
+          email_notifications: {}
+          max_retries: 2
+          min_retry_interval_millis: 60000
+          notebook_task:
+            notebook_path: ../src/07_streaming_joins.py
+            source: WORKSPACE
+          retry_on_timeout: false
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+        - task_key: pipeline_validation
+          depends_on:
+            - task_key: streaming_joins
+            - task_key: customer_cdf
+            - task_key: silver_billing
+          disable_auto_optimization: true
+          disabled: false
+          email_notifications: {}
+          max_retries: 2
+          min_retry_interval_millis: 60000
+          notebook_task:
+            notebook_path: ../src/11_pipeline_validation.py
+            source: WORKSPACE
+          retry_on_timeout: false
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+      email_notifications:
+        no_alert_for_skipped_runs: false
+      max_concurrent_runs: 1
+      performance_target: PERFORMANCE_OPTIMIZED
+      queue:
+        enabled: true
+      timeout_seconds: 0
+      webhook_notifications: {}

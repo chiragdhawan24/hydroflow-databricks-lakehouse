@@ -1,0 +1,13 @@
+bundle:
+  name: hydroflow-databricks-lakehouse
+
+include:
+  - resources/*.yml
+
+targets:
+  dev:
+    mode: development
+    default: true
+
+    workspace:
+      host: https://dbc-61e5d33d-2e6c.cloud.databricks.com
