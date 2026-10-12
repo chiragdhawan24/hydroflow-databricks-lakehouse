@@ -20,7 +20,8 @@ catalog_name = "hydroflow"
 raw_schema_name = "raw"
 bronze_schema_name = "bronze"
 
-raw_base_path = "/Volumes/hydroflow/raw/raw_files"
+# raw_base_path = "/Volumes/hydroflow/raw/raw_files" (ALTERED_FOR_AZURE)
+raw_base_path = "/Volumes/hydroflow/raw/landing"
 checkpoint_base_path = "/Volumes/hydroflow/bronze/checkpoints"
 schema_base_path = "/Volumes/hydroflow/bronze/schemas"
 
@@ -33,7 +34,7 @@ spark.sql(f"CREATE SCHEMA IF NOT EXISTS {catalog_name}.{bronze_schema_name}")
 
 # COMMAND ----------
 
-# Source definitions
+# Source definitions (ALTERED_FOR_AZURE)
 
 bronze_sources = [
     {
@@ -41,40 +42,55 @@ bronze_sources = [
         "source_system": "ami_meter_gateway",
         "source_path": f"{raw_base_path}/meter_readings",
         "file_format": "json",
-        "partition_columns": "ingest_date",
-        "target_table": f"{catalog_name}.{bronze_schema_name}.bronze_meter_readings",
+        "partition_columns": None,
+        "target_table": (
+            f"{catalog_name}.{bronze_schema_name}."
+            "bronze_meter_readings"
+        ),
     },
     {
         "source_entity": "outage_events",
         "source_system": "outage_management_system",
         "source_path": f"{raw_base_path}/outage_events",
         "file_format": "json",
-        "partition_columns": "ingest_date",
-        "target_table": f"{catalog_name}.{bronze_schema_name}.bronze_outage_events",
+        "partition_columns": None,
+        "target_table": (
+            f"{catalog_name}.{bronze_schema_name}."
+            "bronze_outage_events"
+        ),
     },
     {
         "source_entity": "customer_cdc",
         "source_system": "customer_information_system",
         "source_path": f"{raw_base_path}/customer_cdc",
         "file_format": "json",
-        "partition_columns": "ingest_date",
-        "target_table": f"{catalog_name}.{bronze_schema_name}.bronze_customer_cdc",
+        "partition_columns": None,
+        "target_table": (
+            f"{catalog_name}.{bronze_schema_name}."
+            "bronze_customer_cdc"
+        ),
     },
     {
         "source_entity": "billing",
         "source_system": "billing_platform",
         "source_path": f"{raw_base_path}/billing",
-        "file_format": "json",
-        "partition_columns": "billing_month",
-        "target_table": f"{catalog_name}.{bronze_schema_name}.bronze_billing",
+        "file_format": "csv",
+        "partition_columns": None,
+        "target_table": (
+            f"{catalog_name}.{bronze_schema_name}."
+            "bronze_billing"
+        ),
     },
     {
         "source_entity": "gis_zones",
         "source_system": "gis_reference_system",
-        "source_path": f"{raw_base_path}/gis_zones",
+        "source_path": f"{raw_base_path}/zones",
         "file_format": "csv",
         "partition_columns": None,
-        "target_table": f"{catalog_name}.{bronze_schema_name}.bronze_gis_zones",
+        "target_table": (
+            f"{catalog_name}.{bronze_schema_name}."
+            "bronze_gis_zones"
+        ),
     },
 ]
 

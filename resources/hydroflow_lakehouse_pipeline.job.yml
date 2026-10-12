@@ -3,7 +3,17 @@ resources:
     hydroflow_lakehouse_pipeline:
       name: HydroFlow Lakehouse Pipeline
       tasks:
+        - task_key: azure_setup
+          notebook_task:
+          notebook_path: ../src/00_azure_setup.py
+          source: WORKSPACE
+          max_retries: 1
+          min_retry_interval_millis: 30000
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
         - task_key: bronze_autoloader
+          depends_on:
+            - task_key: azure_setup
           disable_auto_optimization: true
           disabled: false
           email_notifications: {}

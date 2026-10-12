@@ -10,4 +10,4 @@ targets:
     default: true
 
     workspace:
-      host: https://dbc-61e5d33d-2e6c.cloud.databricks.com
+      host: https://adb-7405617102533313.13.azuredatabricks.net

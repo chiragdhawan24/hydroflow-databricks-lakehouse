@@ -24,7 +24,8 @@ from pyspark.sql.functions import (
 catalog_name = "hydroflow"
 bronze_schema_name = "bronze"
 
-raw_base_path = "/Volumes/hydroflow/raw/raw_files"
+# raw_base_path = "/Volumes/hydroflow/raw/raw_files" (ALTERED_FOR_AZURE)
+raw_base_path = "/Volumes/hydroflow/raw/landing"
 checkpoint_base_path = "/Volumes/hydroflow/bronze/checkpoints/multiplex"
 schema_base_path = "/Volumes/hydroflow/bronze/schemas/multiplex"
 
@@ -49,28 +50,28 @@ bronze_sources = [
         "source_system": "ami_meter_gateway",
         "source_path": f"{raw_base_path}/meter_readings",
         "file_format": "json",
-        "partition_columns": "ingest_date",
+        "partition_columns": None,
     },
     {
         "source_entity": "outage_events",
         "source_system": "outage_management_system",
         "source_path": f"{raw_base_path}/outage_events",
         "file_format": "json",
-        "partition_columns": "ingest_date",
+        "partition_columns": None,
     },
     {
         "source_entity": "customer_cdc",
         "source_system": "customer_information_system",
         "source_path": f"{raw_base_path}/customer_cdc",
         "file_format": "json",
-        "partition_columns": "ingest_date",
+        "partition_columns": None,
     },
     {
         "source_entity": "billing",
         "source_system": "billing_platform",
         "source_path": f"{raw_base_path}/billing",
-        "file_format": "json",
-        "partition_columns": "billing_month",
+        "file_format": "csv",
+        "partition_columns": None,
     },
     {
         "source_entity": "gis_zones",
