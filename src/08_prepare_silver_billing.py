@@ -43,8 +43,8 @@ billing_df = (
     spark.table(bronze_billing_table)
     .select(
         col("bill_id"),
-        col("source_system"),
-        col("source_entity"),
+        col("_source_system").alias("source_system"),
+        col("_source_entity").alias("source_entity"),
         col("customer_id"),
         col("service_zone_id"),
         to_date(col("billing_month")).alias("billing_month"),
