@@ -1,4 +1,8 @@
 # Databricks notebook source
+# /// script
+# [tool.databricks.environment]
+# environment_version = "6"
+# ///
 # MAGIC %md
 # MAGIC # 02 - Multiplex Bronze Ingestion
 # MAGIC
@@ -70,7 +74,7 @@ bronze_sources = [
         "source_entity": "billing",
         "source_system": "billing_platform",
         "source_path": f"{raw_base_path}/billing",
-        "file_format": "csv",
+        "file_format": "json",
         "partition_columns": None,
     },
     {

@@ -10,6 +10,23 @@ type(spark)
 
 # COMMAND ----------
 
+## FILE CHECK (Before executing Bronze ingestion notebook)
+
+base = "/Volumes/hydroflow/raw/landing"
+
+for folder in [
+    "meter_readings",
+    "outage_events",
+    "customer_cdc",
+    "billing",
+    "gis_zones",
+]:
+    path = f"{base}/{folder}"
+    print(f"\n--- {folder} ---")
+    display(dbutils.fs.ls(path))
+
+# COMMAND ----------
+
 from pyspark.sql.functions import col, current_date, current_timestamp, lit
 
 # COMMAND ----------
@@ -74,7 +91,7 @@ bronze_sources = [
         "source_entity": "billing",
         "source_system": "billing_platform",
         "source_path": f"{raw_base_path}/billing",
-        "file_format": "csv",
+        "file_format": "json",
         "partition_columns": None,
         "target_table": (
             f"{catalog_name}.{bronze_schema_name}."
@@ -84,7 +101,7 @@ bronze_sources = [
     {
         "source_entity": "gis_zones",
         "source_system": "gis_reference_system",
-        "source_path": f"{raw_base_path}/zones",
+        "source_path": f"{raw_base_path}/gis_zones",
         "file_format": "csv",
         "partition_columns": None,
         "target_table": (
@@ -158,3 +175,14 @@ for source in bronze_sources:
 # COMMAND ----------
 
 display(spark.sql(f"SHOW TABLES IN {catalog_name}.{bronze_schema_name}"))
+
+# COMMAND ----------
+
+display(spark.sql("SHOW TABLES IN hydroflow.bronze"))
+
+# COMMAND ----------
+
+df = spark.table("hydroflow.bronze.bronze_meter_readings")
+
+display(df)
+df.printSchema()
